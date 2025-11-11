@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Yomitan Quiz</title>
+    <link rel="icon" type="image/png" href="/images/icon16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/images/icon19.png" sizes="19x19">
+    <link rel="icon" type="image/png" href="/images/icon32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/icon38.png" sizes="38x38">
+    <link rel="icon" type="image/png" href="/images/icon48.png" sizes="48x48">
+    <link rel="icon" type="image/png" href="/images/icon64.png" sizes="64x64">
+    <link rel="icon" type="image/png" href="/images/icon128.png" sizes="128x128">
+    <link rel="stylesheet" type="text/css" href="/css/material.css">
+    <link rel="stylesheet" type="text/css" href="/css/display.css">
+    <link rel="stylesheet" type="text/css" href="/css/display-pronunciation.css">
+    <link rel="stylesheet" type="text/css" href="/css/structured-content.css">
+    <link rel="stylesheet" type="text/css" href="/css/search.css">
+    <link rel="stylesheet" type="text/css" href="/css/search-settings.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="/js/display/search-main2.js" type="module"></script>
+</head>
+<body>
+<div class="content-outer">
+  <div class="content">
+<div id="content-scroll">
+<div id="progress-indicator"></div>
+<div class="search-header-wrapper">
+  <div class="search-header">
+
+    <div id="intro">
+      <h3>
+    <a href="search.html">Yomitan Quiz</a>
+    <button id="Selector">📚 選択</button>
+    <!-- Conquest save/load -->
+  <button id="saveConquestBtn">💾 保存</button>
+  <button id="loadConquestBtn">📂 読込</button>
+    </h3>
+
+    <button id="prevDeckBtn">◀️</button>
+    <span id="deckName" style="font-weight: bold;"></span>
+    <button id="nextDeckBtn">▶️</button>
+
+    <!-- Shuffle toggle -->
+    <label class="toggle">
+    <span class="toggle-switch">
+    <input type="checkbox" id="shuffleToggle" checked>
+      <span>🔀</span>
+    <span class="toggle-slider"></span>
+    </span>
+    </label>
+
+    <!-- QCM mode toggle -->
+    <label class="toggle">
+    <span class="toggle-switch">
+    <input type="checkbox" id="modeToggle">
+      <span>🔢</span>
+    <span class="toggle-slider"></span>
+    </span>
+    </label>
+
+  <!-- Conquest toggle -->
+  <label class="toggle">
+  <span class="toggle-switch">
+    <input type="checkbox" id="conquestToggle">
+      <span>🎯</span>
+    <span class="toggle-slider"></span>
+  </span>
+  </label>
+
+  <div id="conquestSettings">
+  <label>
+    合格ライン
+    <input type="range" id="conquestThresholdInput" min="50" max="100" value="80" step="10">
+    <span id="thresholdValue">80%</span>
+    　間隔
+    <input type="range" id="conquestSpacingInput" min="5" max="50" value="10" step="5">
+    <span id="spacingValue">10x</span>
+  </label>
+</div>
+
+                            
+<!-- Deck selector -->
+<div id="deckSelector" style="display: none;">
+  <div id="deckCheckboxes"></div>
+  <button id="applyDeckBtn">✅ 適用</button>
+  <button id="resetDeckBtn">🔄 リセット</button>
+  <div id="activeDeckInfo"></div>
+    </div>
+</div>
+
+<!-- Range navigation -->
+<div>
+<div id="rangeSizeSelector">
+  <label>
+    範囲サイズ
+    <input type="range" id="rangeSizeSlider" min="0" max="5" value="2">
+    <span id="rangeSizeLabel">100</span>
+  </label>
+</div>
+
+  <button id="prevRangeBtn">◀️</button>
+  <span id="rangeLabel"></span>
+  <button id="nextRangeBtn">▶️</button>
+  <span id="progressDisplay"></span>
+  <button id="prevQuestionBtn" style="display: none;">⬅️</button>
+
+<!-- End of range options -->
+<div id="endOfRangeOptions" style="display: none;">
+  <button id="restartRangeBtn">🔁 もう一度</button>
+  <button id="reviewSkippedBtn">📝 スキップを復習</button>
+    </div>
+</div>
+
+<!-- Text mode -->
+<div id="textMode">
+  <div id="question"></div>
+  <div id="instructions"></div>
+  <div id="comment"></div>
+  <div id="conquestProgressText"></div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" id="answerInput" autocomplete="off" placeholder="入力してください..."/>
+    <span id="answerFeedback" style="display: inline-block; font-size: 24px;"></span>
+  </div>
+  <div id="result"></div>
+</div>
+
+<!-- QCM mode -->
+<div id="choiceMode">
+  <div id="questionChoice"></div>
+  <div id="choices"></div>
+  <div id="conquestProgressChoice"></div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="number" id="answerInput2" autocomplete="off" placeholder="番号を入力.." min="1" max="4" step="1"/>
+    <span id="answerFeedbackChoice" style="display: inline-block; font-size: 24px;"></span>
+  </div>
+</div>
+
+
+
+<script src="lib/papaparse.min.js"></script>
+<script src="lib/wanakana.min.js"></script>
+<script src="quiz.js"></script>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="content-body">
+<div id="dictionary-entries"></div>
+</div>
+
+<div id="content-footer"></div>
+<div id="popup-menus"></div>
+
+<div id="query-parser-container" hidden><div id="query-parser-content" lang="ja"></div></div>
+<div id="query-parser-mode-container"><select id="query-parser-mode-select" hidden ></select></div>
+
+</body>
+</html>
