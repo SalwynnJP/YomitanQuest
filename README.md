@@ -4,7 +4,7 @@
 
 <summary>Preview</summary>
 
-[screen-capture.webm](https://github.com/user-attachments/assets/f99af648-4947-4882-9d0e-a4b6452a4bab)
+[screen-capture.webm](https://github.com/user-attachments/assets/94033a23-c300-4152-87e9-c79f4c3d4006)
 
 </details>
 
@@ -12,7 +12,7 @@
 
 <summary>Low-devices</summary>
 
-<img width="287" height="589" alt="image" src="https://github.com/user-attachments/assets/07fc0019-8ccd-4047-b8e5-19aa705e8aca" />
+<img width="287" height="406" alt="スクリーンショット 2025-11-12 042816" src="https://github.com/user-attachments/assets/1979c37d-5f62-4684-8aa3-731a46ee9c60" />
 
 </details>
 
