@@ -4,7 +4,7 @@
 
 <summary>Preview</summary>
 
-[screen-capture.webm](https://github.com/user-attachments/assets/94033a23-c300-4152-87e9-c79f4c3d4006)
+![screen-capture (1)](https://github.com/user-attachments/assets/0775e922-35c4-4c1a-bae2-a4bba8381898)
 
 </details>
 
