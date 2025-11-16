@@ -7,7 +7,11 @@ Question,Answers,Comment,Instructions,Render as
 「━へと進む」",あした,★ priority form special reading,読みを入力してください,Text
 昨日,きのう,★ priority form special reading,読みを入力してください,Text
 大人,おとな,★ special reading,読みを入力してください,Text
-下手,へた,★ priority form special reading,読みを入力してください,Text
+"下手，__下手__をすると
+①もしうまく行かなかったら。悪い結果になったら。
+「━クビになるかもしれない」
+②〔俗〕ひょっとしたら。
+「━優勝もありうる」",へた,★ priority form special reading,読みを入力してください,Text
 今朝,けさ,★ priority form special reading,読みを入力してください,Text
 何故,なぜ,★ special reading,読みを入力してください,Text
 親父,おやじ,★ priority form special reading,読みを入力してください,Text
@@ -38,7 +42,7 @@ Question,Answers,Comment,Instructions,Render as
 数多,あまた,special reading,読みを入力してください,Text
 土産,みやげ,★ special reading,読みを入力してください,Text
 百合,ゆり,★ priority form special reading,読みを入力してください,Text
-黄昏,たそがれ,★ priority form special reading,読みを入力してください,Text
+黄昏，__黄昏れ__る,たそがれ,★ priority form special reading,読みを入力してください,Text
 硝子,ガラス,rarely used form special reading,読みを入力してください,Text
 女将,おかみ,special reading,読みを入力してください,Text
 松明,たいまつ,special reading,読みを入力してください,Text
