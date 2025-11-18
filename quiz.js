@@ -67,9 +67,11 @@ function init() {
 function loadDeckPaths() {
   const deckPaths = [
     "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/付表.csv", 
-    "decks/表外その1.csv", "decks/表外その2.csv", 
-    "decks/熟字訓.csv", "decks/宛字.csv", "decks/動当義.csv", "decks/熟字訓その1.csv", "decks/熟字訓その2.csv", "decks/湯・重箱.csv",
-    "decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
+    "decks/表外その1.csv", "decks/表外その2.csv", "decks/熟字訓.csv", "decks/宛字.csv", "decks/動当義.csv", 
+    "decks/熟字訓その1.csv", "decks/熟字訓その2.csv", "decks/湯・重箱.csv",
+    "decks/仮名vb.csv", "decks/仮名adj.csv", "decks/助動.csv",
+    "decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
+    "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
     "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv","decks/名字.csv",
     "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv"
