@@ -672,16 +672,28 @@ function handleTextAnswer(input) {
     return;
   }
 
-  // Normal mode - Skip
-  if (inputValue === '') {
-    state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-    state.skippedCount++;
-    showAnswerFeedbackText('▶️');
-    state.currentIndex++;
-    showQuestion();
-    updateProgressDisplay();
-    return;
-  }
+// Normal mode - Blank = Correct
+if (inputValue === '') {
+  state.currentDeck[state.currentIndex].userAnswer = 'correct';
+  state.correctCount++;
+  showAnswerFeedbackText('✅');
+  state.currentIndex++;
+  showQuestion();
+  updateProgressDisplay();
+  return;
+}
+
+// Normal mode - 'x' = Skip
+if (inputValue.toLowerCase() === 'x') {
+  state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+  state.skippedCount++;
+  showAnswerFeedbackText('▶️');
+  input.value = '';
+  state.currentIndex++;
+  showQuestion();
+  updateProgressDisplay();
+  return;
+}
 
   // Normal mode - Answer
   const isCorrect = checkAnswer(inputValue);
@@ -734,16 +746,28 @@ function handleChoiceAnswer(input) {
     return;
   }
 
-  // Normal mode - Skip
-  if (inputValue === '') {
-    state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-    state.skippedCount++;
-    showAnswerFeedbackChoice('▶️');
-    state.currentIndex++;
-    showQuestion();
-    updateProgressDisplay();
-    return;
-  }
+// Normal mode - Blank = Correct
+if (inputValue === '') {
+  state.currentDeck[state.currentIndex].userAnswer = 'correct';
+  state.correctCount++;
+  showAnswerFeedbackChoice('✅');
+  state.currentIndex++;
+  showQuestion();
+  updateProgressDisplay();
+  return;
+}
+
+// Normal mode - 'x' = Skip
+if (inputValue.toLowerCase() === 'x') {
+  state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+  state.skippedCount++;
+  showAnswerFeedbackChoice('▶️');
+  input.value = '';
+  state.currentIndex++;
+  showQuestion();
+  updateProgressDisplay();
+  return;
+}
 
   // Normal mode - Answer
   const choiceIndex = parseInt(inputValue, 10) - 1;
@@ -1296,17 +1320,45 @@ function initEventListeners() {
     rangeSizeSlider.addEventListener('input', updateRangeSizeFromSlider);
   }
 
-  document.getElementById('answerInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      handleTextAnswer(e.target);
+document.getElementById('answerInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    handleTextAnswer(e.target);
+  } else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
+    // Skip immédiatement quand on tape 'x' sur input vide
+    if (!state.conquestEnabled) {
+      const r = state.ranges[state.currentRangeIndex];
+      if (state.currentIndex <= r.end && state.currentIndex < state.currentDeck.length) {
+        state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+        state.skippedCount++;
+        showAnswerFeedbackText('▶️');
+        state.currentIndex++;
+        showQuestion();
+        updateProgressDisplay();
+        e.preventDefault();
+      }
     }
-  });
+  }
+});
 
-  document.getElementById('answerInput2').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      handleChoiceAnswer(e.target);
+document.getElementById('answerInput2').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    handleChoiceAnswer(e.target);
+  } else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
+    // Skip immédiatement quand on tape 'x' sur input vide
+    if (!state.conquestEnabled) {
+      const r = state.ranges[state.currentRangeIndex];
+      if (state.currentIndex <= r.end && state.currentIndex < state.currentDeck.length) {
+        state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+        state.skippedCount++;
+        showAnswerFeedbackChoice('▶️');
+        state.currentIndex++;
+        showQuestion();
+        updateProgressDisplay();
+        e.preventDefault();
+      }
     }
-  });
+  }
+});
 
   document.getElementById('modeToggle').addEventListener('click', () => {
     state.isChoiceMode = !state.isChoiceMode;
