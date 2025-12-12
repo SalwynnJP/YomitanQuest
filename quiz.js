@@ -42,8 +42,9 @@ originalDeckMetadata: [],
   conquestThreshold: CONFIG.DEFAULT_CONQUEST_THRESHOLD,
   conquestSpacingModifier: CONFIG.DEFAULT_CONQUEST_SPACING,
   conquestSessionData: null,
-  conquestShuffleSnapshot: false
+  conquestShuffleSnapshot: false,
 };
+
 
 let conquestCountdownInterval = null;
 
@@ -56,12 +57,14 @@ function init() {
   initDeckSelector();
   initEventListeners();
   initButtonListeners();
-  loadCombinedDecks();
-// Masquer le bouton de sauvegarde au démarrage
+
+  // --- AJOUTER CETTE LIGNE ICI ---
   const saveBtn = document.getElementById('saveConquestBtn');
-  if (saveBtn) {
-    saveBtn.style.display = 'none';
-  }
+  if (saveBtn) saveBtn.style.display = 'none';
+  // -------------------------------
+
+  loadCombinedDecks();
+
 }
 
 function loadDeckPaths() {
@@ -142,72 +145,64 @@ function resetDeckSelection() {
 }
 
 async function loadCombinedDecks() {
+  // Reset propre
   resetProgress();
   state.currentDeck = [];
   state.deckMetadata = [];
-
+  
+  // --- CHARGEMENT DES CSV ---
   const loadPromises = state.selectedDeckIndices.map(async (index) => {
-    const deckUrl = chrome.runtime.getURL(state.decks[index].path);
-    const response = await fetch(deckUrl);
+    const deck = state.decks[index];
+    if (deck.customData) {
+        deck.customData.forEach(q => {
+            state.currentDeck.push(q);
+            state.deckMetadata.push({ deckIndex: index, deckName: deck.name, requiresQCM: deck.requiresQCM });
+        });
+        return;
+    }
+    const response = await fetch(chrome.runtime.getURL(deck.path));
     const csv = await response.text();
-    
-    return new Promise(resolve => {
-      Papa.parse(csv, {
-        header: true,
-        skipEmptyLines: true,
+    Papa.parse(csv, {
+        header: true, skipEmptyLines: true,
         complete: results => {
-          results.data.forEach(question => {
-            state.currentDeck.push(question);
-            state.deckMetadata.push({
-              deckIndex: index,
-              deckName: state.decks[index].name,
-              requiresQCM: state.decks[index].requiresQCM
+            results.data.forEach(q => {
+                state.currentDeck.push(q);
+                state.deckMetadata.push({ deckIndex: index, deckName: deck.name, requiresQCM: deck.requiresQCM });
             });
-          });
-          resolve();
         }
-      });
     });
   });
-
   await Promise.all(loadPromises);
-  
-  // Distribution équilibrée des cartes quand plusieurs decks sont combinés
-if (state.selectedDeckIndices.length > 1) {
-  interleaveDecks();
-}
+  // -------------------------------------------
 
+  if (state.selectedDeckIndices.length > 1) interleaveDecks();
+
+  // Sauvegarde de référence
   state.originalDeck = state.currentDeck.map(q => ({...q}));
   state.originalDeckMetadata = [...state.deckMetadata];
 
-  const hasQCMRequiredDeck = state.selectedDeckIndices.some(i => state.decks[i].requiresQCM);
-  
-  if (hasQCMRequiredDeck && state.selectedDeckIndices.length === 1) {
+  // Gestion QCM
+  const hasQCM = state.selectedDeckIndices.some(i => state.decks[i].requiresQCM);
+  if (hasQCM && state.selectedDeckIndices.length === 1) {
     state.isChoiceMode = true;
     document.getElementById('modeToggle').checked = true;
-  } else if (state.selectedDeckIndices.length === 1) {
-    state.isChoiceMode = false;
-    document.getElementById('modeToggle').checked = false;
   }
-  
+
   updateDeckDisplay();
+
+  // === MODIFICATION ICI : On force le mode Classique ===
   generateRanges(state.currentDeck.length);
   state.currentRangeIndex = 0;
   state.currentIndex = state.ranges[0].start;
-  
-  if (state.isShuffleEnabled) {
-    shuffleCurrentRange();
-  }
-  
+  if (state.isShuffleEnabled) shuffleCurrentRange();
   updateRangeLabel();
-  
-  // Réactiver les inputs au chargement
-  const inputText = document.getElementById('answerInput');
-  const inputChoice = document.getElementById('answerInput2');
-  if (inputText) inputText.disabled = false;
-  if (inputChoice) inputChoice.disabled = false;
-  
   showQuestion();
+  
+  // Unlock inputs
+  const i1 = document.getElementById('answerInput');
+  const i2 = document.getElementById('answerInput2');
+  if(i1) i1.disabled = false;
+  if(i2) i2.disabled = false;
 }
 
 function updateDeckDisplay() {
@@ -649,18 +644,20 @@ function checkAnswer(userInput) {
   return possibleAnswers.includes(userAnswer);
 }
 
-function handleTextAnswer(input) {
+
+async function handleTextAnswer(input) {
   const r = state.ranges[state.currentRangeIndex];
   
+  // Vérification de fin de range (sauf mode Conquest)
   if (!state.conquestEnabled && (state.currentIndex > r.end || state.currentIndex >= state.currentDeck.length)) {
     return;
   }
 
   const inputValue = input.value.trim();
 
-  // Conquest mode
+  // Conquest mode logic...
   if (state.conquestEnabled) {
-    if (inputValue === '') {
+     if (inputValue === '') {
       processConquestAnswer(false);
     } else {
       const isCorrect = checkAnswer(inputValue);
@@ -672,30 +669,32 @@ function handleTextAnswer(input) {
     return;
   }
 
-// Normal mode - Blank = Correct
-if (inputValue === '') {
-  state.currentDeck[state.currentIndex].userAnswer = 'correct';
-  state.correctCount++;
-  showAnswerFeedbackText('✅');
-  state.currentIndex++;
-  showQuestion();
-  updateProgressDisplay();
-  return;
-}
+  // Normal Classic Mode logic
+  
+  // Cas : Entrée vide = Correct
+  if (inputValue === '') {
+    state.currentDeck[state.currentIndex].userAnswer = 'correct';
+    state.correctCount++;
+    showAnswerFeedbackText('✅');
+    state.currentIndex++;
+    showQuestion();
+    updateProgressDisplay();
+    return;
+  }
 
-// Normal mode - 'x' = Skip
-if (inputValue.toLowerCase() === 'x') {
-  state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-  state.skippedCount++;
-  showAnswerFeedbackText('▶️');
-  input.value = '';
-  state.currentIndex++;
-  showQuestion();
-  updateProgressDisplay();
-  return;
-}
+  // Cas : 'x' = Skip
+  if (inputValue.toLowerCase() === 'x') {
+    state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+    state.skippedCount++;
+    showAnswerFeedbackText('▶️');
+    input.value = '';
+    state.currentIndex++;
+    showQuestion();
+    updateProgressDisplay();
+    return;
+  }
 
-  // Normal mode - Answer
+  // Cas : Vérification réponse normale
   const isCorrect = checkAnswer(inputValue);
   if (isCorrect) {
     state.currentDeck[state.currentIndex].userAnswer = 'correct';
@@ -710,14 +709,17 @@ if (inputValue.toLowerCase() === 'x') {
   }
 }
 
-function handleChoiceAnswer(input) {
+async function handleChoiceAnswer(input) {
   const r = state.ranges[state.currentRangeIndex];
 
+  // Vérification fin de range (Sauf Conquest)
   if (!state.conquestEnabled && (state.currentIndex > r.end || state.currentIndex >= state.currentDeck.length)) {
     return;
   }
 
   const inputValue = input.value.trim();
+
+
 
   // Conquest mode
   if (state.conquestEnabled) {
@@ -909,6 +911,162 @@ function reviewSkipped() {
   if (inputChoice) inputChoice.disabled = false;
   
   showQuestion();
+}
+
+function exportSkippedToCSV() {
+  const r = state.ranges[state.currentRangeIndex];
+  const skippedQuestions = [];
+
+  for (let i = r.start; i <= r.end; i++) {
+    const answer = state.currentDeck[i].userAnswer;
+    if (!answer || answer === 'skipped') {
+      skippedQuestions.push(state.currentDeck[i]);
+    }
+  }
+
+  if (skippedQuestions.length === 0) {
+    alert("No skipped questions to export!");
+    return;
+  }
+
+  // Créer le nom basé sur le(s) deck(s) actif(s)
+let deckName;
+if (state.selectedDeckIndices.length === 1) {
+  deckName = state.decks[state.selectedDeckIndices[0]].name;
+} else {
+  deckName = '統合';
+}
+
+  // Créer le CSV
+  const headers = Object.keys(skippedQuestions[0]);
+  const csvContent = [
+    headers.join(','),
+    ...skippedQuestions.map(q => 
+      headers.map(h => {
+        const value = q[h] || '';
+        // Échapper les guillemets et virgules
+        return `"${String(value).replace(/"/g, '""')}"`;
+      }).join(',')
+    )
+  ].join('\n');
+
+  // Télécharger
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${deckName}_missed.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  //keep alert(`✅ ${skippedQuestions.length} skipped cards exported!`);
+}
+
+function addSkippedToDeck() {
+  const r = state.ranges[state.currentRangeIndex];
+  const skippedQuestions = [];
+
+  for (let i = r.start; i <= r.end; i++) {
+    const answer = state.currentDeck[i].userAnswer;
+    if (!answer || answer === 'skipped') {
+      skippedQuestions.push(state.currentDeck[i]);
+    }
+  }
+
+  if (skippedQuestions.length === 0) {
+    alert("No skipped questions to add!");
+    return;
+  }
+
+  // Créer la liste des decks disponibles (seulement les custom decks ou créer un nouveau)
+  const customDecks = state.decks
+    .map((deck, index) => ({ deck, index }))
+    .filter(item => item.deck.customData); // Seulement les decks custom
+
+  let deckOptions = customDecks
+    .map((item, i) => `${i + 1}. ${item.deck.name}`)
+    .join('\n');
+  
+  deckOptions += `\n${customDecks.length + 1}. ➕ Create new deck`;
+
+  const choice = prompt(
+    `${skippedQuestions.length} skipped cards.\nSelect target deck:\n\n${deckOptions}\n\nEnter number:`
+  );
+
+  if (!choice) return;
+
+  const choiceNum = parseInt(choice);
+  
+  if (isNaN(choiceNum) || choiceNum < 1 || choiceNum > customDecks.length + 1) {
+    alert("❌ Invalid choice!");
+    return;
+  }
+
+  let targetDeckIndex;
+  let targetDeckName;
+
+  // Option: créer un nouveau deck
+  if (choiceNum === customDecks.length + 1) {
+    const newDeckName = prompt("New deck name:");
+    if (!newDeckName) return;
+
+    // Vérifier si le deck existe déjà
+    const existingIndex = state.decks.findIndex(d => d.name === newDeckName);
+    if (existingIndex !== -1) {
+      alert(`⚠️ Deck "${newDeckName}" already exists. Adding to existing deck.`);
+      targetDeckIndex = existingIndex;
+      targetDeckName = newDeckName;
+    } else {
+      // Créer un nouveau deck
+      targetDeckIndex = state.decks.length;
+      targetDeckName = newDeckName;
+      state.decks.push({
+        name: targetDeckName,
+        path: null,
+        requiresQCM: false,
+        customData: []
+      });
+    }
+  } else {
+    // Deck existant sélectionné
+    const selectedDeck = customDecks[choiceNum - 1];
+    targetDeckIndex = selectedDeck.index;
+    targetDeckName = selectedDeck.deck.name;
+  }
+
+  // Ajouter les questions skippées au deck cible
+  const targetDeck = state.decks[targetDeckIndex];
+  
+  if (!targetDeck.customData) {
+    targetDeck.customData = [];
+  }
+
+  // Vérifier les doublons (basé sur Question)
+  let addedCount = 0;
+  let duplicateCount = 0;
+
+  skippedQuestions.forEach(q => {
+    const isDuplicate = targetDeck.customData.some(
+      existing => existing.Question === q.Question
+    );
+    
+    if (!isDuplicate) {
+      targetDeck.customData.push({...q});
+      addedCount++;
+    } else {
+      duplicateCount++;
+    }
+  });
+
+  // Recharger l'interface
+  initDeckSelector();
+  syncDeckCheckboxes();
+
+  let message = `✅ ${addedCount} cards added to "${targetDeckName}"!`;
+  if (duplicateCount > 0) {
+    message += `\n⚠️ ${duplicateCount} duplicate(s) skipped.`;
+  }
+  alert(message);
 }
 
 // ================================
@@ -1182,7 +1340,8 @@ function toggleConquestLock(lock) {
     document.getElementById('applyDeckBtn'),
     document.getElementById('resetDeckBtn'),
     document.getElementById('conquestSettings'),
-    document.getElementById('loadConquestBtn')
+    document.getElementById('loadConquestBtn'),
+    document.getElementById('importCustomDeckBtn')
     
   ];
 
@@ -1310,6 +1469,100 @@ function loadConquestPrompt() {
   input.click();
 }
 
+function importCustomDeck() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv';
+  input.multiple = true; // Permet de sélectionner plusieurs fichiers
+  
+  input.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    try {
+      const newDeckIndices = [];
+
+      for (const file of files) {
+        const text = await file.text();
+        
+        await new Promise((resolve, reject) => {
+          Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              if (!results.data || results.data.length === 0) {
+                reject(new Error(`Empty file: ${file.name}`));
+                return;
+              }
+
+              // Vérifier que les colonnes nécessaires existent
+              const firstRow = results.data[0];
+              if (!firstRow.Question || !firstRow.Answers) {
+                reject(new Error(`Invalid format in ${file.name}. Need "Question" and "Answers" columns.`));
+                return;
+              }
+
+              // Vérifier si ce deck existe déjà (par nom)
+              const deckName = file.name.replace('.csv', '');
+              const existingDeckIndex = state.decks.findIndex(d => d.name === deckName);
+
+              if (existingDeckIndex !== -1) {
+                // Le deck existe déjà, on skip
+                console.log(`Deck "${deckName}" already exists, skipping...`);
+                // Ne pas l'ajouter à newDeckIndices
+              } else {
+                // Nouveau deck, on l'ajoute
+                const deckIndex = state.decks.length;
+                state.decks.push({
+                  name: deckName,
+                  path: null,
+                  requiresQCM: false,
+                  customData: results.data
+                });
+                newDeckIndices.push(deckIndex);
+              }
+              resolve();
+            },
+            error: (error) => {
+              reject(error);
+            }
+          });
+        });
+      }
+
+      const skippedCount = files.length - newDeckIndices.length;
+
+      // Si tous les decks étaient des doublons, ne pas recharger
+      if (newDeckIndices.length === 0) {
+        alert(`⚠️ All ${files.length} deck(s) already existed. No changes made.`);
+        return;
+      }
+
+      // Remplacer la sélection actuelle par les nouveaux decks importés
+      state.selectedDeckIndices = newDeckIndices;
+
+      // Recharger l'interface du sélecteur
+      initDeckSelector();
+      syncDeckCheckboxes();
+
+      // Charger les decks
+      await loadCombinedDecks();
+
+      let message = `✅ ${newDeckIndices.length} custom deck(s) imported!`;
+      if (skippedCount > 0) {
+        message += `\n⚠️ ${skippedCount} deck(s) already existed and were skipped.`;
+      }
+      //keep - alert(message);
+
+    } catch (error) {
+      alert(`❌ Import failed: ${error.message}`);
+      console.error(error);
+    }
+  };
+  
+  input.click();
+}
+
 // ================================
 // EVENT LISTENERS
 // ================================
@@ -1320,69 +1573,75 @@ function initEventListeners() {
     rangeSizeSlider.addEventListener('input', updateRangeSizeFromSlider);
   }
 
-document.getElementById('answerInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    handleTextAnswer(e.target);
-  } else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
-    // Skip immédiatement quand on tape 'x' sur input vide
-    if (!state.conquestEnabled) {
-      const r = state.ranges[state.currentRangeIndex];
-      if (state.currentIndex <= r.end && state.currentIndex < state.currentDeck.length) {
-        state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-        state.skippedCount++;
-        showAnswerFeedbackText('▶️');
-        state.currentIndex++;
-        showQuestion();
-        updateProgressDisplay();
-        e.preventDefault();
-      }
-    }
+  // --- GESTION DES INPUTS (CORRIGÉ POUR LE SKIP 'X') ---
+  const input1 = document.getElementById('answerInput');
+  if (input1) {
+      input1.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          handleTextAnswer(e.target);
+        } 
+        // Si on appuie sur 'x' et que le champ est vide
+        else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
+          if (!state.conquestEnabled) {
+            e.preventDefault(); // Empêche d'écrire le x deux fois
+            e.target.value = 'x'; // ON FORCE LA VALEUR À 'x'
+            handleTextAnswer(e.target);
+          }
+        }
+      });
   }
-});
 
-document.getElementById('answerInput2').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    handleChoiceAnswer(e.target);
-  } else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
-    // Skip immédiatement quand on tape 'x' sur input vide
-    if (!state.conquestEnabled) {
-      const r = state.ranges[state.currentRangeIndex];
-      if (state.currentIndex <= r.end && state.currentIndex < state.currentDeck.length) {
-        state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-        state.skippedCount++;
-        showAnswerFeedbackChoice('▶️');
-        state.currentIndex++;
-        showQuestion();
-        updateProgressDisplay();
-        e.preventDefault();
-      }
-    }
+  const input2 = document.getElementById('answerInput2');
+  if (input2) {
+      input2.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          handleChoiceAnswer(e.target);
+        } 
+        // Si on appuie sur 'x' et que le champ est vide
+        else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
+          if (!state.conquestEnabled) {
+            e.preventDefault();
+            e.target.value = 'x'; // ON FORCE LA VALEUR À 'x'
+            handleChoiceAnswer(e.target);
+          }
+        }
+      });
+      
+      // Validation chiffres 1-4
+      input2.addEventListener('input', (e) => {
+        // On autorise le 'x' maintenant, sinon il serait effacé par cette validation
+        if (e.target.value.toLowerCase() === 'x') return; 
+
+        const value = parseInt(e.target.value);
+        if (isNaN(value)) {
+            e.target.value = ''; // Efface si ce n'est pas un nombre
+        } else if (value < 1 || value > 4) {
+            e.target.value = '';
+        }
+      });
   }
-});
 
-  document.getElementById('modeToggle').addEventListener('click', () => {
+  // --- TOGGLES ---
+  document.getElementById('modeToggle')?.addEventListener('click', () => {
     state.isChoiceMode = !state.isChoiceMode;
     document.getElementById('textMode').style.display = state.isChoiceMode ? 'none' : 'block';
     document.getElementById('choiceMode').style.display = state.isChoiceMode ? 'block' : 'none';
     showQuestion();
   });
 
-  document.getElementById('shuffleToggle').addEventListener('change', (e) => {
+  document.getElementById('shuffleToggle')?.addEventListener('change', (e) => {
     if (state.conquestEnabled) {
       e.target.checked = !e.target.checked;
       alert('⚠️ Cannot change shuffle during Conquest mode');
       return;
     }
-    
     state.isShuffleEnabled = e.target.checked;
-    if (state.isShuffleEnabled) {
-      shuffleCurrentRange();
-    } else {
-      restoreOriginalRange();
-    }
+    if (state.isShuffleEnabled) shuffleCurrentRange();
+    else restoreOriginalRange();
   });
 
-  document.getElementById('conquestToggle').addEventListener('change', (e) => {
+  // --- CONQUEST ---
+  document.getElementById('conquestToggle')?.addEventListener('change', (e) => {
     state.conquestEnabled = e.target.checked;
     if (state.conquestEnabled) {
       startConquestMode();
@@ -1390,29 +1649,23 @@ document.getElementById('answerInput2').addEventListener('keydown', (e) => {
       if (conquestCountdownInterval) {
         clearInterval(conquestCountdownInterval);
         conquestCountdownInterval = null;
-
-   // Réactiver les inputs si on annule pendant le countdown
-      document.getElementById('answerInput').disabled = false;
-      document.getElementById('answerInput2').disabled = false;
+        document.getElementById('answerInput').disabled = false;
+        document.getElementById('answerInput2').disabled = false;
       }
-
-    // Reset les deux éléments de progression
-    const progressElText = document.getElementById('conquestProgressText');
-    const progressElChoice = document.getElementById('conquestProgressChoice');
-    if (progressElText) progressElText.innerHTML = '';
-    if (progressElChoice) progressElChoice.innerHTML = '';
-
-      //document.getElementById('conquestProgress').textContent = '';
+      const p1 = document.getElementById('conquestProgressText');
+      const p2 = document.getElementById('conquestProgressChoice');
+      if (p1) p1.innerHTML = '';
+      if (p2) p2.innerHTML = '';
       toggleConquestLock(false);
       showQuestion();
     }
   });
 
-  document.getElementById('conquestThresholdInput').addEventListener('input', (e) => {
+  document.getElementById('conquestThresholdInput')?.addEventListener('input', (e) => {
     updateConquestThreshold(e.target.value);
   });
 
-  document.getElementById('conquestSpacingInput').addEventListener('input', (e) => {
+  document.getElementById('conquestSpacingInput')?.addEventListener('input', (e) => {
     updateConquestSpacing(e.target.value);
   });
 }
@@ -1434,8 +1687,11 @@ function initButtonListeners() {
   document.getElementById('loadConquestBtn')?.addEventListener('click', loadConquestPrompt);
 
   document.getElementById('prevQuestionBtn')?.addEventListener('click', goToPreviousQuestion);
-
-    const selectorButton = document.getElementById("Selector");
+  document.getElementById('addSkippedToDeckBtn')?.addEventListener('click', addSkippedToDeck);
+  
+  document.getElementById('importCustomDeckBtn')?.addEventListener('click', importCustomDeck);
+  document.getElementById('exportSkippedBtn')?.addEventListener('click', exportSkippedToCSV);
+  const selectorButton = document.getElementById("Selector");
   selectorButton.addEventListener("click", toggleDeckSelector);
 }
 
