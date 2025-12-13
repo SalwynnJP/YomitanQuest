@@ -77,14 +77,20 @@ function loadDeckPaths() {
     "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
     "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv","decks/名字.csv",
-    "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv"
+    "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv",
+    "decks/準1級読み.csv", "decks/1級訓読み.csv", "decks/誤字訂正.csv", "decks/書取り.csv",
+    "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv"
   ];
   
   // Default mode QCM
   const qcmRequiredDecks = [
     '擬音', '熟字訓その2', '熟語その1', '熟語その2', 
     '四その1', '四その2', '四その3',
-    '諺その1', '諺その2', '諺その3', '諺その4'];
+    '諺その1', '諺その2', '諺その3', '諺その4',
+    '誤字訂正', '書取り',
+    '同音・同訓', '類語・対義語', 
+    '送り仮名', '熟語構成' 
+  ];
   
   state.decks = deckPaths.map(path => {
     const name = path.split('/').pop().replace('.csv', '');
@@ -181,11 +187,19 @@ async function loadCombinedDecks() {
   state.originalDeck = state.currentDeck.map(q => ({...q}));
   state.originalDeckMetadata = [...state.deckMetadata];
 
-  // Gestion QCM
+// Gestion QCM
   const hasQCM = state.selectedDeckIndices.some(i => state.decks[i].requiresQCM);
-  if (hasQCM && state.selectedDeckIndices.length === 1) {
-    state.isChoiceMode = true;
-    document.getElementById('modeToggle').checked = true;
+  
+  if (state.selectedDeckIndices.length === 1) {
+    // En mode single deck, forcer le mode selon les besoins du deck
+    if (hasQCM) {
+      state.isChoiceMode = true;
+      document.getElementById('modeToggle').checked = true;
+    } else {
+      // Forcer le mode texte si le deck ne nécessite pas le QCM
+      state.isChoiceMode = false;
+      document.getElementById('modeToggle').checked = false;
+    }
   }
 
   updateDeckDisplay();
