@@ -26,7 +26,7 @@
 - **Range Navigation** - Customizable question ranges (25-1000 items)
 - **Shuffle & Review** - Randomize questions or review skipped items
 ### 🎓 Decks
-- 31 customizable decks
+- 40 customizable decks
 - Flexible deck selection and combination
 ### 🔧 Technical
 - Optimized for low-end devices
