@@ -1645,7 +1645,7 @@ function initEventListeners() {
       });
   }
 
-  const input2 = document.getElementById('answerInput2');
+const input2 = document.getElementById('answerInput2');
   if (input2) {
       input2.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -1655,20 +1655,30 @@ function initEventListeners() {
         else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
           if (!state.conquestEnabled) {
             e.preventDefault();
-            e.target.value = 'x'; // ON FORCE LA VALEUR À 'x'
-            handleChoiceAnswer(e.target);
+            
+            // --- CORRECTION : LOGIQUE SKIP DIRECTE ---
+            // On n'écrit pas 'x' (car le champ numérique le refuse et renvoie vide).
+            // On exécute directement l'action de sauter la question.
+            
+            state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+            state.skippedCount++;
+            showAnswerFeedbackChoice('▶️');
+            e.target.value = '';
+            state.currentIndex++;
+            showQuestion();
+            updateProgressDisplay();
+            // ----------------------------------------
           }
         }
       });
       
-      // Validation chiffres 1-4
+      // Validation chiffres 1-4 (conservez ce bloc tel quel, il est correct)
       input2.addEventListener('input', (e) => {
-        // On autorise le 'x' maintenant, sinon il serait effacé par cette validation
         if (e.target.value.toLowerCase() === 'x') return; 
 
         const value = parseInt(e.target.value);
         if (isNaN(value)) {
-            e.target.value = ''; // Efface si ce n'est pas un nombre
+            e.target.value = ''; 
         } else if (value < 1 || value > 4) {
             e.target.value = '';
         }
@@ -1801,10 +1811,3 @@ function toggleDeckSelector() {
 // ================================
 
 init();
-
-document.getElementById('answerInput2').addEventListener('input', (e) => {
-  const value = parseInt(e.target.value);
-  if (value < 1 || value > 4) {
-    e.target.value = '';
-  }
-});
