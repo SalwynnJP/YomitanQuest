@@ -117,11 +117,17 @@
 
 <!-- Text mode -->
 <div id="textMode">
+  <div style="display: flex; align-items: center; gap: 10px;">
   <div id="question"></div>
+  <button id="commentToggle" style="margin: 0;">💡 ヒント</button>
+</div>
   <div id="instructions"></div>
   <div id="comment"></div>
   <div id="conquestProgressText"></div>
-  <div style="display: flex; align-items: center; gap: 10px;">
+    <button id="bushsuToggle" style="display: none; margin: 10px 0;">📖 部首表</button>
+<img id="bushsuImage" src="images/bushuu.webp" style="display: none; max-width: 100%; margin: 10px 0;">
+<div id="commentText" style="display: none; margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap;"></div>
+   <div style="display: flex; align-items: center; gap: 10px;">
     <input type="text" id="answerInput" autocomplete="off" placeholder="入力してください..."/>
     <span id="answerFeedback" style="display: inline-block; font-size: 24px;"></span>
   </div>
@@ -130,8 +136,14 @@
 
 <!-- QCM mode -->
 <div id="choiceMode">
+  <div style="display: flex; align-items: center; gap: 10px;">
   <div id="questionChoice"></div>
-  <div id="choices"></div>
+  <button id="bushsuToggleChoice" style="display: none; margin: 10px 0;">📖 部首表</button>
+  <button id="commentToggleChoice" style="margin: 0;">💡 ヒント</button>
+</div>
+  <img id="bushsuImageChoice" src="images/bushuu.webp" style="display: none; max-width: 100%; margin: 10px 0;">
+  <div id="commentTextChoice" style="display: none; margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap;"></div>
+   <div id="choices"></div>
   <div id="conquestProgressChoice"></div>
   <div style="display: flex; align-items: center; gap: 10px;">
     <input type="number" id="answerInput2" autocomplete="off" placeholder="番号を入力.." min="1" max="4" step="1"/>
