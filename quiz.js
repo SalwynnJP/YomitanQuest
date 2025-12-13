@@ -79,7 +79,7 @@ function loadDeckPaths() {
     "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv","decks/名字.csv",
     "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv",
     "decks/準1級読み.csv", "decks/1級訓読み.csv", "decks/誤字訂正.csv", "decks/書取り.csv",
-    "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv"
+    "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv", "decks/二級四字熟語.csv","decks/部首.csv"
   ];
   
   // Default mode QCM
@@ -89,7 +89,7 @@ function loadDeckPaths() {
     '諺その1', '諺その2', '諺その3', '諺その4',
     '誤字訂正', '書取り',
     '同音・同訓', '類語・対義語', 
-    '送り仮名', '熟語構成' 
+    '送り仮名', '熟語構成', '部首', '二級四字熟語'
   ];
   
   state.decks = deckPaths.map(path => {
@@ -480,6 +480,46 @@ function showQuestion() {
 
   document.getElementById('endOfRangeOptions').style.display = 'none';
   
+  // Gérer l'affichage du bouton bushu
+  const currentDeckName = state.deckMetadata[state.currentIndex]?.deckName;
+  const isBushuDeck = currentDeckName === '部首';
+  
+  const bushsuToggle = document.getElementById('bushsuToggle');
+  const bushsuToggleChoice = document.getElementById('bushsuToggleChoice');
+  
+  if (bushsuToggle) bushsuToggle.style.display = isBushuDeck ? 'block' : 'none';
+  if (bushsuToggleChoice) bushsuToggleChoice.style.display = isBushuDeck ? 'block' : 'none';
+
+// Gérer le commentaire
+  const comment = state.currentDeck[state.currentIndex].Comment || '';
+  const commentToggle = document.getElementById('commentToggle');
+  const commentToggleChoice = document.getElementById('commentToggleChoice');
+  const commentText = document.getElementById('commentText');
+  const commentTextChoice = document.getElementById('commentTextChoice');
+  
+  // Toujours réinitialiser l'état caché
+  if (commentText) commentText.style.display = 'none';
+  if (commentTextChoice) commentTextChoice.style.display = 'none';
+  
+  if (comment && comment.trim() !== '') {
+    // Il y a un commentaire - afficher le bouton
+    if (commentToggle) {
+      commentToggle.style.display = 'block';
+      commentToggle.textContent = '💡 ヒント';
+    }
+    if (commentToggleChoice) {
+      commentToggleChoice.style.display = 'block';
+      commentToggleChoice.textContent = '💡 ヒント';
+    }
+    if (commentText) commentText.innerHTML = formatText(comment);
+    if (commentTextChoice) commentTextChoice.innerHTML = formatText(comment);
+  } else {
+    // Pas de commentaire - cacher le bouton
+    if (commentToggle) commentToggle.style.display = 'none';
+    if (commentToggleChoice) commentToggleChoice.style.display = 'none';
+  }
+
+
   const question = state.currentDeck[state.currentIndex].Question;
   const correctAnswer = state.currentDeck[state.currentIndex].Answers;
 
@@ -1707,6 +1747,36 @@ function initButtonListeners() {
   document.getElementById('exportSkippedBtn')?.addEventListener('click', exportSkippedToCSV);
   const selectorButton = document.getElementById("Selector");
   selectorButton.addEventListener("click", toggleDeckSelector);
+
+// Toggle image bushu
+  document.getElementById('bushsuToggle')?.addEventListener('click', (e) => {
+    const img = document.getElementById('bushsuImage');
+    const isVisible = img.style.display !== 'none';
+    img.style.display = isVisible ? 'none' : 'block';
+    e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
+  });
+  
+  document.getElementById('bushsuToggleChoice')?.addEventListener('click', (e) => {
+    const img = document.getElementById('bushsuImageChoice');
+    const isVisible = img.style.display !== 'none';
+    img.style.display = isVisible ? 'none' : 'block';
+    e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
+  });
+
+// Toggle commentaire
+  document.getElementById('commentToggle')?.addEventListener('click', (e) => {
+    const text = document.getElementById('commentText');
+    const isVisible = text.style.display === 'block';
+    text.style.display = isVisible ? 'none' : 'block';
+    e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
+  });
+  
+  document.getElementById('commentToggleChoice')?.addEventListener('click', (e) => {
+    const text = document.getElementById('commentTextChoice');
+    const isVisible = text.style.display === 'block';
+    text.style.display = isVisible ? 'none' : 'block';
+    e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
+  });
 }
 
 // ================================
