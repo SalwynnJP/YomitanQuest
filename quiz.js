@@ -72,7 +72,7 @@ function loadDeckPaths() {
     "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/付表.csv", 
     "decks/表外その1.csv", "decks/表外その2.csv", "decks/熟字訓.csv", "decks/宛字.csv", "decks/動当義.csv", 
     "decks/熟字訓その1.csv", "decks/熟字訓その2.csv", "decks/湯・重箱.csv",
-    "decks/仮名vb.csv", "decks/仮名adj.csv", "decks/助動.csv",
+    "decks/仮名vb.csv", "decks/vb_read.csv","decks/仮名adj.csv", "decks/助動.csv",
     "decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
     "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
@@ -84,8 +84,8 @@ function loadDeckPaths() {
   
   // Default mode QCM
   const qcmRequiredDecks = [
-    '擬音', '熟字訓その2', '熟語その1', '熟語その2', 
-    '四その1', '四その2', '四その3',
+    '擬音', '熟字訓その2', '熟字訓', '熟語その1', '熟語その2', 
+    '四その1', '四その2', '四その3', "vb_read",
     '諺その1', '諺その2', '諺その3', '諺その4',
     '誤字訂正', '書取り',
     '同音・同訓', '類語・対義語', 
@@ -1627,63 +1627,136 @@ function initEventListeners() {
     rangeSizeSlider.addEventListener('input', updateRangeSizeFromSlider);
   }
 
-  // --- GESTION DES INPUTS (CORRIGÉ POUR LE SKIP 'X') ---
+// --- RACCOURCIS CLAVIER GLOBAUX ---
+  document.addEventListener('keydown', (e) => {
+    const activeElement = document.activeElement;
+    const isInInput = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+    
+    // Flèche gauche = Question précédente
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (!state.conquestEnabled) {
+        const prevBtn = document.getElementById('prevQuestionBtn');
+        if (prevBtn && prevBtn.style.display !== 'none') {
+          goToPreviousQuestion();
+        }
+      }
+    }
+    
+    // Flèche droite = Toggle commentaire
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const textMode = document.getElementById('textMode');
+      if (textMode && textMode.style.display !== 'none') {
+        document.getElementById('commentToggle')?.click();
+      } else {
+        document.getElementById('commentToggleChoice')?.click();
+      }
+    }
+
+    // === Touches pour SKIP (X ou Maj) même hors input ===
+    const isSkipKey = e.key.toLowerCase() === 'x' || e.key === 'Shift';
+    if (isSkipKey && !isInInput) {
+      e.preventDefault();
+      executeSkipAction();
+    }
+
+    // === Touches pour VALIDER (Enter ou <) même hors input ===
+    const isValidateKey = e.key === 'Enter' || e.key === '<';
+    if (isValidateKey && !isInInput) {
+      e.preventDefault();
+      executeValidateAction();
+    }
+  });
+
+// --- GESTION DES INPUTS ---
   const input1 = document.getElementById('answerInput');
   if (input1) {
-      input1.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+    input1.addEventListener('keydown', (e) => {
+      // Validation : Enter ou <
+      if (e.key === 'Enter' || e.key === '<') {
+        e.preventDefault();
+        handleTextAnswer(e.target);
+      } 
+      // Skip : x ou Shift (si le champ est vide pour éviter les erreurs de saisie Majuscule)
+      else if ((e.key.toLowerCase() === 'x' || e.key === 'Shift') && e.target.value === '') {
+        if (!state.conquestEnabled) {
+          e.preventDefault();
+          e.target.value = 'x'; 
           handleTextAnswer(e.target);
-        } 
-        // Si on appuie sur 'x' et que le champ est vide
-        else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
-          if (!state.conquestEnabled) {
-            e.preventDefault(); // Empêche d'écrire le x deux fois
-            e.target.value = 'x'; // ON FORCE LA VALEUR À 'x'
-            handleTextAnswer(e.target);
-          }
         }
-      });
+      }
+    });
+    
+    input1.addEventListener('input', (e) => {
+      const inputValue = e.target.value.trim();
+      if (inputValue === '' || inputValue.toLowerCase() === 'x') return;
+      if (checkAnswer(inputValue)) handleTextAnswer(e.target);
+    });
   }
 
-const input2 = document.getElementById('answerInput2');
+  const input2 = document.getElementById('answerInput2');
   if (input2) {
-      input2.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          handleChoiceAnswer(e.target);
-        } 
-        // Si on appuie sur 'x' et que le champ est vide
-        else if (e.key.toLowerCase() === 'x' && e.target.value === '') {
-          if (!state.conquestEnabled) {
-            e.preventDefault();
-            
-            // --- CORRECTION : LOGIQUE SKIP DIRECTE ---
-            // On n'écrit pas 'x' (car le champ numérique le refuse et renvoie vide).
-            // On exécute directement l'action de sauter la question.
-            
-            state.currentDeck[state.currentIndex].userAnswer = 'skipped';
-            state.skippedCount++;
-            showAnswerFeedbackChoice('▶️');
-            e.target.value = '';
-            state.currentIndex++;
-            showQuestion();
-            updateProgressDisplay();
-            // ----------------------------------------
-          }
+    input2.addEventListener('keydown', (e) => {
+      // Validation : Enter ou <
+      if (e.key === 'Enter' || e.key === '<') {
+        e.preventDefault();
+        handleChoiceAnswer(e.target);
+      } 
+      // Skip : x ou Shift
+      else if ((e.key.toLowerCase() === 'x' || e.key === 'Shift') && e.target.value === '') {
+        if (!state.conquestEnabled) {
+          e.preventDefault();
+          executeSkipAction();
         }
-      });
-      
-      // Validation chiffres 1-4 (conservez ce bloc tel quel, il est correct)
-      input2.addEventListener('input', (e) => {
-        if (e.target.value.toLowerCase() === 'x') return; 
-
-        const value = parseInt(e.target.value);
-        if (isNaN(value)) {
-            e.target.value = ''; 
-        } else if (value < 1 || value > 4) {
-            e.target.value = '';
-        }
-      });
+      }
+    });
+    
+    input2.addEventListener('input', (e) => {
+      if (e.target.value.toLowerCase() === 'x') return; 
+      const value = parseInt(e.target.value);
+      if (isNaN(value) || value < 1 || value > 4) e.target.value = '';
+    });
   }
+
+function executeSkipAction() {
+  const textMode = document.getElementById('textMode');
+  const isTextMode = textMode && textMode.style.display !== 'none';
+  
+  if (isTextMode) {
+    const input = document.getElementById('answerInput');
+    if (input && !input.disabled) {
+      input.value = 'x';
+      handleTextAnswer(input);
+    }
+  } else {
+    const input = document.getElementById('answerInput2');
+    if (input && !input.disabled) {
+      state.currentDeck[state.currentIndex].userAnswer = 'skipped';
+      state.skippedCount++;
+      showAnswerFeedbackChoice('▶️');
+      input.value = '';
+      state.currentIndex++;
+      showQuestion();
+      updateProgressDisplay();
+    }
+  }
+}
+
+function executeValidateAction() {
+  const textMode = document.getElementById('textMode');
+  const isTextMode = textMode && textMode.style.display !== 'none';
+  
+  if (isTextMode) {
+    const input = document.getElementById('answerInput');
+    if (input && !input.disabled) handleTextAnswer(input);
+  } else {
+    const input = document.getElementById('answerInput2');
+    if (input && !input.disabled) handleChoiceAnswer(input);
+  }
+}
+
+
 
   // --- TOGGLES ---
   document.getElementById('modeToggle')?.addEventListener('click', () => {
