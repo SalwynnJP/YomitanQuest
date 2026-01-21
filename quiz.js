@@ -69,22 +69,21 @@ function init() {
 
 function loadDeckPaths() {
   const deckPaths = [
-    "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/付表.csv", 
-    "decks/表外その1.csv", "decks/表外その2.csv", "decks/熟字訓.csv", "decks/宛字.csv", "decks/動当義.csv", 
-    "decks/熟字訓その1.csv", "decks/熟字訓その2.csv", "decks/湯・重箱.csv",
-    "decks/仮名vb.csv", "decks/vb_read.csv","decks/仮名adj.csv", "decks/助動.csv",
+    "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/表外その1.csv", "decks/表外その2.csv", 
+    "decks/付表.csv", "decks/熟字訓・当て字.csv", "decks/熟字訓・当て字2.csv", "decks/当て字・JITENDEX.csv",
+    "decks/湯・重箱.csv","decks/仮名adj.csv", "decks/仮名vb.csv", "decks/vb_read.csv", "decks/助動.csv",
     "decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
     "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
-    "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv","decks/名字.csv",
-    "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv",
-    "decks/準1級読み.csv", "decks/1級訓読み.csv", "decks/誤字訂正.csv", "decks/書取り.csv",
+    "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv",
+    "decks/名字.csv", "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv",
+    "decks/1級訓.csv", "decks/準1級読み.csv", "decks/1級訓読み.csv", "decks/誤字訂正.csv", "decks/書取り.csv",
     "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv", "decks/二級四字熟語.csv","decks/部首.csv"
   ];
   
   // Default mode QCM
   const qcmRequiredDecks = [
-    '擬音', '熟字訓その2', '熟字訓', '熟語その1', '熟語その2', 
+    '擬音', '熟語その1', '熟語その2', 
     '四その1', '四その2', '四その3', "vb_read",
     '諺その1', '諺その2', '諺その3', '諺その4',
     '誤字訂正', '書取り',
