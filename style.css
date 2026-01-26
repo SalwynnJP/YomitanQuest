@@ -38,6 +38,7 @@ button {
 }
 
 button#Selector,
+button#importCustomDeckBtn,
 button#saveConquestBtn,
 button#loadConquestBtn {
     padding: 6px 9px;
@@ -199,4 +200,32 @@ div > span#progressDisplay {
     gap: 0px;
     margin: 0;
     white-space: nowrap;
+}
+
+#commentText, 
+#commentTextChoice {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    
+    /* Utilisation des variables de thème Yomitan */
+    background-color: var(--input-background-color); /* Fond adaptatif */
+    color: var(--text-color);                         /* Texte adaptatif (blanc en dark, noir en light) */
+    
+    /* Optionnel : une petite bordure pour mieux délimiter le bloc */
+    border: 1px solid var(--border-color);
+    
+    /* Ombre légère pour le relief */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+/* Si tu veux que le titre du bouton Hint change aussi de couleur */
+#commentToggle, #commentToggleChoice {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border: 1px solid var(--border-color);
 }
