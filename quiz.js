@@ -662,9 +662,9 @@ function showEndOfRange() {
 function formatText(text, isChoice = false) {
   let formatted = text
     .replace(/__([^_]+)__/g, '<u>$1</u>')
-    .replace(/:([^_]+):/g, '')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    //.replace(/\|\|([^|]+)\|\|/g, '<span class="spoiler">$1</span>');
+    // .replace(/:([^_]+):/g, '') // Supprime ou commente cette ligne
+    //.replace(/:([^_]+):/g, '<span class="spoiler">$1</span>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
   if (isChoice) {
     formatted = formatted.replace(/,/g, '、');
@@ -1642,8 +1642,8 @@ function initEventListeners() {
       }
     }
     
-    // Flèche droite = Toggle commentaire
-    if (e.key === 'ArrowRight') {
+    // Flèche droite replaced by "W" = Toggle commentaire
+    if (e.key === 'w') {
       e.preventDefault();
       const textMode = document.getElementById('textMode');
       if (textMode && textMode.style.display !== 'none') {
