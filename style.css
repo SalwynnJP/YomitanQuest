@@ -9,7 +9,14 @@
 #question {
     word-wrap: break-word;
     white-space: pre-wrap;
-    font-size: large;
+    /*font-size: large;*/
+}
+
+#content-scroll {
+    max-height: 100vh;    /* Utilise 80% de la hauteur de l'écran */
+    overflow-y: auto;    /* Scroll automatique si ça dépasse */
+    padding: 10px;
+    /*border-bottom: 1px solid var(--separator-color1);  */
 }
 
 h3 {
@@ -228,4 +235,8 @@ div > span#progressDisplay {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: 1px solid var(--border-color);
+}
+
+strong {
+    color: red;
 }
