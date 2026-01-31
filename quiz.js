@@ -72,7 +72,7 @@ function loadDeckPaths() {
     "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/表外その1.csv", "decks/表外その2.csv", 
     "decks/付表.csv", "decks/熟字訓・当て字.csv", "decks/熟字訓・当て字2.csv", "decks/当て字・JITENDEX.csv",
     "decks/湯・重箱.csv","decks/仮名adj.csv", "decks/仮名vb.csv", "decks/vb_read.csv", "decks/助動.csv",
-    "decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
+    "decks/日本語__文法.csv","decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
     "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
     "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv",
@@ -503,12 +503,12 @@ function showQuestion() {
   if (comment && comment.trim() !== '') {
     // Il y a un commentaire - afficher le bouton
     if (commentToggle) {
-      commentToggle.style.display = 'block';
-      commentToggle.textContent = '💡 ヒント';
+      commentToggle.style.display = 'none';
+      //commentToggle.textContent = '💡 ヒント';
     }
     if (commentToggleChoice) {
-      commentToggleChoice.style.display = 'block';
-      commentToggleChoice.textContent = '💡 ヒント';
+      commentToggleChoice.style.display = 'none';
+      //commentToggleChoice.textContent = '💡 ヒント';
     }
     if (commentText) commentText.innerHTML = formatText(comment);
     if (commentTextChoice) commentTextChoice.innerHTML = formatText(comment);
@@ -1835,14 +1835,14 @@ function initButtonListeners() {
     const img = document.getElementById('bushsuImage');
     const isVisible = img.style.display !== 'none';
     img.style.display = isVisible ? 'none' : 'block';
-    e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
+    //e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
   });
   
   document.getElementById('bushsuToggleChoice')?.addEventListener('click', (e) => {
     const img = document.getElementById('bushsuImageChoice');
     const isVisible = img.style.display !== 'none';
     img.style.display = isVisible ? 'none' : 'block';
-    e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
+    //e.target.textContent = isVisible ? '📖 部首表' : '📖 隠す';
   });
 
 // Toggle commentaire
@@ -1850,14 +1850,14 @@ function initButtonListeners() {
     const text = document.getElementById('commentText');
     const isVisible = text.style.display === 'block';
     text.style.display = isVisible ? 'none' : 'block';
-    e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
+    //e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
   });
   
   document.getElementById('commentToggleChoice')?.addEventListener('click', (e) => {
     const text = document.getElementById('commentTextChoice');
     const isVisible = text.style.display === 'block';
     text.style.display = isVisible ? 'none' : 'block';
-    e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
+    //e.target.textContent = isVisible ? '💡 ヒント' : '💡 隠す';
   });
 }
 
