@@ -17,7 +17,7 @@ const state = {
   currentDeck: [],
   deckMetadata: [],
   originalDeck: [],
-originalDeckMetadata: [],
+  originalDeckMetadata: [],
   
   // Navigation
   currentIndex: 0,
@@ -69,16 +69,16 @@ function init() {
 
 function loadDeckPaths() {
   const deckPaths = [
-    "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/表外その1.csv", "decks/表外その2.csv", 
-    "decks/付表.csv", "decks/熟字訓・当て字.csv", "decks/熟字訓・当て字2.csv", "decks/当て字・JITENDEX.csv",
-    "decks/湯・重箱.csv","decks/仮名adj.csv", "decks/仮名vb.csv", "decks/vb_read.csv", "decks/助動.csv",
-    "decks/日本語__文法.csv","decks/干支その1.csv", "decks/干支その2.csv", "decks/節気.csv", "decks/年齢.csv", 
+    "decks/常・音.csv", "decks/常・訓.csv", "decks/失敗.csv", "decks/表外その1.csv", "decks/表外その2.csv", "decks/表外その3.csv", "decks/採掘.csv",
+    "decks/付表.csv", "decks/熟字訓・当て字.csv", "decks/熟字訓・当て字2.csv", "decks/当て字・熟字訓_jitendex.csv",
+    "decks/湯・重箱.csv","decks/仮名adj.csv", "decks/仮名vb.csv", "decks/vb_read.csv", "decks/助動.csv", "decks/複合語.csv",
+    "decks/言語知識（語彙）.csv", "decks/言語知識（文法）.csv", "decks/order_n1.csv", "decks/order_n2.csv", "decks/text_n1.csv", "decks/日本語__文法.csv","decks/干支その1.csv", "decks/干支・七草.csv", "decks/節気.csv", "decks/年齢.csv", 
     "decks/擬音.csv", "decks/熟語その1.csv", "decks/熟語その2.csv",
     "decks/四その1.csv", "decks/四その2.csv", "decks/四その3.csv",
     "decks/諺その1.csv", "decks/諺その2.csv", "decks/諺その3.csv", "decks/諺その4.csv",
     "decks/名字.csv", "decks/all.csv", "decks/二字.csv", "decks/三字.csv", "decks/四字.csv",
     "decks/1級訓.csv", "decks/準1級読み.csv", "decks/1級訓読み.csv", "decks/誤字訂正.csv", "decks/書取り.csv",
-    "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv", "decks/二級四字熟語.csv","decks/部首.csv"
+    "decks/同音・同訓.csv", "decks/類語・対義語.csv", "decks/送り仮名.csv", "decks/熟語構成.csv", "decks/二級四字熟語.csv"
   ];
   
   // Default mode QCM
@@ -88,7 +88,7 @@ function loadDeckPaths() {
     '諺その1', '諺その2', '諺その3', '諺その4',
     '誤字訂正', '書取り',
     '同音・同訓', '類語・対義語', 
-    '送り仮名', '熟語構成', '部首', '二級四字熟語'
+    '送り仮名', '熟語構成', '二級四字熟語'
   ];
   
   state.decks = deckPaths.map(path => {
@@ -292,6 +292,51 @@ function interleaveDecks() {
 }
 
 // ================================
+// MEDIA PLAYER FUNCTIONS (NEW)
+// ================================
+
+function createMediaPlayer(mediaPath, mediaType) {
+  const container = document.createElement('div');
+  container.className = 'media-container';
+  container.style.cssText = 'text-align: center;';
+  
+  if (mediaType === 'audio') {
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.cssText = 'width: 100%; max-width: 500px;';
+    audio.src = chrome.runtime.getURL(mediaPath);
+    container.appendChild(audio);
+    
+// ✅ CETTE LIGNE pour auto-play
+  audio.play().catch(e => console.log('Auto-play blocked:', e));
+    
+  } else if (mediaType === 'video') {
+    const video = document.createElement('video');
+    video.controls = true;
+    video.style.cssText = 'width: 100%; max-width: 600px; max-height: 400px;';
+    video.src = chrome.runtime.getURL(mediaPath);
+    container.appendChild(video);
+    
+// ✅ CETTE LIGNE pour auto-play
+  video.play().catch(e => console.log('Auto-play blocked:', e));
+  }
+  
+  return container;
+}
+
+function clearMediaPlayers() {
+  // Nettoyer les anciens lecteurs média
+  document.querySelectorAll('.media-container').forEach(el => {
+    // Arrêter la lecture avant de supprimer
+    const audio = el.querySelector('audio');
+    const video = el.querySelector('video');
+    if (audio) audio.pause();
+    if (video) video.pause();
+    el.remove();
+  });
+}
+
+// ================================
 // RANGE MANAGEMENT
 // ================================
 
@@ -458,6 +503,7 @@ function restoreOriginalRange() {
   showQuestion();
 }
 
+
 // ================================
 // QUESTION DISPLAY
 // ================================
@@ -465,13 +511,11 @@ function restoreOriginalRange() {
 function showQuestion() {
   const r = state.ranges[state.currentRangeIndex];
   
-  // In Conquest mode, never show end of range
   if (!state.conquestEnabled && (state.currentIndex > r.end || state.currentIndex >= state.currentDeck.length)) {
     showEndOfRange();
     return;
   }
 
-  // Verify question exists
   if (!state.currentDeck[state.currentIndex]) {
     console.error('Question not found at index', state.currentIndex);
     return;
@@ -489,57 +533,79 @@ function showQuestion() {
   if (bushsuToggle) bushsuToggle.style.display = isBushuDeck ? 'block' : 'none';
   if (bushsuToggleChoice) bushsuToggleChoice.style.display = isBushuDeck ? 'block' : 'none';
 
-// Gérer le commentaire
+  // Gérer le commentaire
   const comment = state.currentDeck[state.currentIndex].Comment || '';
   const commentToggle = document.getElementById('commentToggle');
   const commentToggleChoice = document.getElementById('commentToggleChoice');
   const commentText = document.getElementById('commentText');
   const commentTextChoice = document.getElementById('commentTextChoice');
   
-  // Toujours réinitialiser l'état caché
   if (commentText) commentText.style.display = 'none';
   if (commentTextChoice) commentTextChoice.style.display = 'none';
   
   if (comment && comment.trim() !== '') {
-    // Il y a un commentaire - afficher le bouton
-    if (commentToggle) {
-      commentToggle.style.display = 'none';
-      //commentToggle.textContent = '💡 ヒント';
-    }
-    if (commentToggleChoice) {
-      commentToggleChoice.style.display = 'none';
-      //commentToggleChoice.textContent = '💡 ヒント';
-    }
+    if (commentToggle) commentToggle.style.display = 'none';
+    if (commentToggleChoice) commentToggleChoice.style.display = 'none';
     if (commentText) commentText.innerHTML = formatText(comment);
     if (commentTextChoice) commentTextChoice.innerHTML = formatText(comment);
   } else {
-    // Pas de commentaire - cacher le bouton
     if (commentToggle) commentToggle.style.display = 'none';
     if (commentToggleChoice) commentToggleChoice.style.display = 'none';
   }
 
-
   const question = state.currentDeck[state.currentIndex].Question;
   const correctAnswer = state.currentDeck[state.currentIndex].Answers;
 
-// Déterminer si cette question nécessite le mode QCM
+  // ===== CODE MÉDIA CORRIGÉ =====
+  const q = state.currentDeck[state.currentIndex];
+  clearMediaPlayers();
+  
+  // ✅ DÉCLARER LES VARIABLES UNE SEULE FOIS ICI
   const requiresQCM = state.deckMetadata[state.currentIndex]?.requiresQCM || false;
-
-// En mode multi-deck, alterner selon les besoins de chaque carte
   const useQCMForThisQuestion = state.selectedDeckIndices.length > 1 
     ? requiresQCM 
     : state.isChoiceMode;
-
-// En mode combiné, synchroniser le toggle avec le type de question
-if (state.selectedDeckIndices.length > 1) {
-  document.getElementById('modeToggle').checked = useQCMForThisQuestion;
+  
+  // Vérifier si cette question a un média
+  if (q.media && q.mediaType) {
+    const player = createMediaPlayer(q.media, q.mediaType);
+    
+    // Utiliser la variable déjà déclarée
+    if (useQCMForThisQuestion) {
+      const questionChoice = document.getElementById('questionChoice');
+      if (questionChoice) {
+        questionChoice.classList.add('has-media');
+        questionChoice.parentNode.insertBefore(player, questionChoice.nextSibling);
+      }
+    } else {
+      const questionEl = document.getElementById('question');
+      if (questionEl) {
+        questionEl.classList.add('has-media');
+        questionEl.parentNode.insertBefore(player, questionEl.nextSibling);
+      }
+    }
+  } else {
+  // Retirer la classe si pas de média
+  document.getElementById('question')?.classList.remove('has-media');
+  document.getElementById('questionChoice')?.classList.remove('has-media');
 }
+  // ===== FIN CODE MÉDIA =====
 
- if (useQCMForThisQuestion) {
+  // ❌ SUPPRIMER CES LIGNES (déjà déclarées au-dessus)
+  // const requiresQCM = state.deckMetadata[state.currentIndex]?.requiresQCM || false;
+  // const useQCMForThisQuestion = state.selectedDeckIndices.length > 1 
+  //   ? requiresQCM 
+  //   : state.isChoiceMode;
+
+  // En mode combiné, synchroniser le toggle
+  if (state.selectedDeckIndices.length > 1) {
+    document.getElementById('modeToggle').checked = useQCMForThisQuestion;
+  }
+
+  if (useQCMForThisQuestion) {
     showMultipleChoiceQuestion(question, correctAnswer);
     document.getElementById('textMode').style.display = 'none';
     document.getElementById('choiceMode').style.display = 'block';
-        // Forcer le focus sur answerInput2
     setTimeout(() => {
       document.getElementById('answerInput2').focus();
     }, 0);
@@ -547,32 +613,24 @@ if (state.selectedDeckIndices.length > 1) {
     showTextQuestion(question);
     document.getElementById('textMode').style.display = 'block';
     document.getElementById('choiceMode').style.display = 'none';
-    // Forcer le focus sur answerInput
     setTimeout(() => {
       document.getElementById('answerInput').focus();
     }, 0);
   }
 
-  // IMPORTANT: Seulement si Conquest est activé
   if (state.conquestEnabled) {
     updateConquestProgress();
   } else {
-    // Vider explicitement si Conquest n'est pas actif
     const progressElText = document.getElementById('conquestProgressText');
     const progressElChoice = document.getElementById('conquestProgressChoice');
     if (progressElText) progressElText.innerHTML = '';
     if (progressElChoice) progressElChoice.innerHTML = '';
   }
 
-
-// À placer à la fin de showQuestion(), juste avant la fermeture finale
-// Gérer l'affichage du bouton précédent
-const prevBtn = document.getElementById('prevQuestionBtn');
-if (prevBtn) {
-  prevBtn.style.display = (!state.conquestEnabled && state.currentIndex > r.start) ? '' : 'none';
-}
-
-
+  const prevBtn = document.getElementById('prevQuestionBtn');
+  if (prevBtn) {
+    prevBtn.style.display = (!state.conquestEnabled && state.currentIndex > r.start) ? '' : 'none';
+  }
 }
 
 function showTextQuestion(question) {
@@ -587,6 +645,7 @@ function showTextQuestion(question) {
 }
 
 function showMultipleChoiceQuestion(question, correctAnswer) {
+  
   state.currentChoices = generateMultipleChoices(correctAnswer, state.currentDeck);
   
   const choicesHTML = state.currentChoices
@@ -699,6 +758,7 @@ function checkAnswer(userInput) {
 
 
 async function handleTextAnswer(input) {
+   clearMediaPlayers();
   const r = state.ranges[state.currentRangeIndex];
   
   // Vérification de fin de range (sauf mode Conquest)
@@ -763,6 +823,7 @@ async function handleTextAnswer(input) {
 }
 
 async function handleChoiceAnswer(input) {
+   clearMediaPlayers();
   const r = state.ranges[state.currentRangeIndex];
 
   // Vérification fin de range (Sauf Conquest)
@@ -1643,7 +1704,7 @@ function initEventListeners() {
     }
     
     // Flèche droite replaced by "W" = Toggle commentaire
-    if (e.key === 'w') {
+    if (e.key === 'q') {
       e.preventDefault();
       const textMode = document.getElementById('textMode');
       if (textMode && textMode.style.display !== 'none') {
